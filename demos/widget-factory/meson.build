@@ -31,16 +31,17 @@ if can_use_objcopy_for_resources
                  '--c-name', '_g_binary_widgetfactory',
                  '@INPUT@'])
 
+  wf_resources_immifile = configure_file(
+      input : 'widgetfactory_resources.asm',
+      output : 'widgetfactory_resources.asm',
+      copy : true)
+
   # Create object file containing resource data
   widgetfactory_resources_binary = custom_target('widgetfactory_resources.o',
-      input : widgetfactory_gresource,
+      input : [widgetfactory_gresource, wf_resources_immifile],
       output : 'widgetfactory_resources.o',
-      command : [ld,
-                 '-z', 'noexecstack',
-                 '-r',
-                 '-b','binary',
-                 '@INPUT@',
-                 '-o','@OUTPUT@'])
+      command : cc.cmd_array() + [ '-c', '-Wa,--noexecstack',
+                '-o', '@OUTPUT@', '-x', 'assembler', '@INPUT1@'])
 
   # Rename symbol to match the one in the C file
   widgetfactory_resources_o = custom_target('widgetfactory_resources2.o',

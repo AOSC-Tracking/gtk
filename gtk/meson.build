@@ -787,16 +787,22 @@ if can_use_objcopy_for_resources
                  '--manual-register',
                  '@INPUT@'])
 
+  # Copy the intermidiate asm file to build directory
+  gtk_resources_immifile = configure_file(
+      input : 'gtkresources.asm',
+      output : 'gtkresources.asm',
+      copy : true)
+
+  # GNOME what's wrong with you
+  # Use the compiler to generate proper binary resource data
   # Create object file containing resource data
+  # Make sure gtk.gresources is generated
   gtk_resources_binary = custom_target('gtkresources_blob.o',
-      input : gtk_gresource,
+      input : [gtk_gresource, gtk_resources_immifile],
       output : 'gtkresources_blob.o',
-      command : [ld,
-                 '-z', 'noexecstack',
-                 '-r',
-                 '-b','binary',
-                 '@INPUT@',
-                 '-o','@OUTPUT@'])
+      command : cc.cmd_array() + [ '-c', '-Wa,--noexecstack',
+                  '-o', '@OUTPUT@', '-x', 'assembler',
+                  '@INPUT1@'])
 
   # Rename symbol to match the one in the C file
   gtk_resources_o = custom_target('gtkresources_blob2.o',
