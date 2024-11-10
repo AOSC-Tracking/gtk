@@ -190,17 +190,17 @@ if can_use_objcopy_for_resources
                  '--external-data',
                  '--c-name', '_g_binary_gtkdemo',
                  '@INPUT@'])
+  gtkdemo_resource_immifile = configure_file(
+      input : 'gtkdemo_resources.asm',
+      output : 'gtkdemo_resources.asm',
+      copy : true)
 
   # Create object file containing resource data
   gtkdemo_resources_binary = custom_target('gtkdemo_resources.o',
-      input : gtkdemo_gresource,
+      input : [gtkdemo_gresource, gtkdemo_resource_immifile],
       output : 'gtkdemo_resources.o',
-      command : [ld,
-                 '-z', 'noexecstack',
-                 '-r',
-                 '-b','binary',
-                 '@INPUT@',
-                 '-o','@OUTPUT@'])
+      command : cc.cmd_array() + [ '-c', '-Wa,--noexecstack',
+        '-o', '@OUTPUT@', '-x', 'assembler', '@INPUT1@'])
 
   # Rename symbol to match the one in the C file
   gtkdemo_resources_o = custom_target('gtkdemo_resources2.o',
